@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peta Jabatan Organisasi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=14">
+</head>
+<body>
+
+<!-- ===== TITLE BLOCK / HEADER ===== -->
+<header class="titleblock">
+  <div class="titleblock__id">
+    <div class="titleblock__mark">ORG.01</div>
+    <div class="titleblock__title">
+      <h1 id="orgTitle" contenteditable="true" spellcheck="false">Peta Jabatan Organisasi</h1>
+      <p class="titleblock__sub">Bagan &middot; sumber data: berkas Excel (.xlsx)</p>
+    </div>
+  </div>
+
+  <div class="titleblock__status">
+    <div class="status__row">
+      <span class="status__dot" id="statusDot"></span>
+      <span id="statusText">Belum ada data dimuat</span>
+    </div>
+    <div class="status__row status__meta">
+      <span id="employeeCount">0 orang</span>
+      <span class="status__sep">&middot;</span>
+      <span id="lastSaved">belum disimpan</span>
+    </div>
+  </div>
+</header>
+
+<!-- ===== TOOLBAR ===== -->
+<nav class="toolbar">
+  <div class="toolbar__group">
+    <button class="btn btn--icon" id="btnUndo" title="Urungkan (Ctrl+Z)" disabled>↶</button>
+    <button class="btn btn--icon" id="btnRedo" title="Ulangi (Ctrl+Y)" disabled>↷</button>
+  </div>
+
+  <div class="toolbar__group">
+    <button class="btn btn--primary" id="btnAddRoot">+ Tambah Jabatan Puncak</button>
+    <button class="btn" id="btnAddChildTop" title="Tambah simpul baru">+ Tambah Jabatan</button>
+  </div>
+
+  <div class="toolbar__group">
+    <label class="btn btn--file">
+      Impor Excel
+      <input type="file" id="fileImport" accept=".xlsx,.xls" hidden>
+    </label>
+    <button class="btn" id="btnExport">Ekspor Excel</button>
+  </div>
+
+  <div class="toolbar__group">
+    <button class="btn" id="btnGithubSettings">⚙ Pengaturan GitHub</button>
+    <button class="btn" id="btnPull">↓ Tarik dari GitHub</button>
+    <button class="btn btn--accent" id="btnPush">↑ Simpan ke GitHub</button>
+    <button class="btn" id="btnAutoSync" title="Saat aktif: perubahan otomatis terkirim ke GitHub, dan pembaruan dari orang lain otomatis ditarik selama halaman ini terbuka">🔁 Sinkron Otomatis: Nonaktif</button>
+  </div>
+
+  <div class="toolbar__group">
+    <button class="btn" id="btnOrientation" title="Ganti orientasi DEFAULT bagan (jabatan yang diatur manual tidak terpengaruh)">⇄ Default: Horizontal</button>
+    <button class="btn" id="btnSelectMode" title="Pilih beberapa jabatan sekaligus untuk mengatur susunannya masing-masing (baris/tumpuk) bersamaan">☑ Pilih Banyak</button>
+  </div>
+
+  <div class="toolbar__group toolbar__group--right">
+    <input type="search" id="searchBox" placeholder="Cari jabatan / keterangan…" class="search">
+    <div class="zoom">
+      <button class="btn btn--icon" id="btnGridToggle" title="Tampilkan/sembunyikan garis grid latar">▦</button>
+      <button class="btn btn--icon" id="btnPanMode" title="Alat geser (klik-tarik untuk menggeser tampilan)">✋</button>
+      <button class="btn btn--icon" id="zoomOut">−</button>
+      <span id="zoomLevel">100%</span>
+      <button class="btn btn--icon" id="zoomIn">+</button>
+      <button class="btn btn--icon" id="zoomReset" title="Atur ulang tampilan">⤾</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== FOCUS BANNER (tampilkan hanya satu jabatan + turunannya) ===== -->
+<div class="focus-banner" id="focusBanner">
+  <span class="focus-banner__label">🔎 Menampilkan: <strong id="focusBannerTitle"></strong> dan seluruh jabatan di bawahnya</span>
+  <button class="btn btn--sm" id="btnClearFocus">Tampilkan Semua Jabatan</button>
+</div>
+
+<!-- ===== CHART CANVAS ===== -->
+<main class="canvas-wrap" id="canvasWrap">
+  <div class="canvas-grid" id="chartCanvas">
+    <ul id="chartRoot" class="tree"></ul>
+  </div>
+  <div class="empty-state" id="emptyState">
+    <p class="empty-state__eyebrow">Kanvas kosong</p>
+    <h2>Belum ada struktur organisasi</h2>
+    <p>Impor berkas Excel yang ada, tarik data dari GitHub, atau mulai dari nol dengan menambah jabatan puncak.</p>
+  </div>
+</main>
+
+<!-- ===== NODE EDIT MODAL ===== -->
+<div class="modal-backdrop" id="nodeModalBackdrop">
+  <div class="modal">
+    <div class="modal__head">
+      <h3 id="nodeModalTitle">Tambah Jabatan</h3>
+      <button class="modal__close" id="nodeModalClose">×</button>
+    </div>
+    <div class="modal__body">
+      <label>Jabatan<span class="req">*</span>
+        <input type="text" id="fieldJabatan" placeholder="cth. Manajer Operasional">
+      </label>
+      <label>Atasan Langsung
+        <select id="fieldAtasan"></select>
+      </label>
+      <label>Susunan Jabatan Ini di Antara Saudaranya
+        <select id="fieldSusunan">
+          <option value="">Ikuti pengaturan atasan (default)</option>
+          <option value="horizontal">Horizontal — sejajar berbaris dengan saudara lain</option>
+          <option value="vertical">Vertikal — bertumpuk terpisah dari saudara lain</option>
+        </select>
+      </label>
+      <p class="modal__hint">
+        Mengatur bagaimana <strong>jabatan ini sendiri</strong> ditampilkan di antara
+        saudara-saudaranya (jabatan lain dengan atasan yang sama) — diatur dari sini,
+        <em>bukan</em> dari atasannya. Sebagian saudara bisa berbaris sementara yang lain
+        bertumpuk, sekaligus dalam satu bagan.
+      </p>
+      <label>Kategori
+        <select id="fieldKategori">
+          <option value="">Struktural (bagan normal)</option>
+          <option value="pelaksana">Pelaksana</option>
+          <option value="fungsional">Jabatan Fungsional</option>
+        </select>
+      </label>
+      <p class="modal__hint" id="kategoriHint" style="display:none;">
+        Jabatan dengan kategori ini akan dikelompokkan bersama jabatan sejenis dalam satu kotak terpisah di bawah atasannya, bukan sebagai kotak individual di bagan utama.
+      </p>
+      <label>Orientasi Cabang Bawahan
+        <select id="fieldOrientasi">
+          <option value="">Ikuti bagan (default)</option>
+          <option value="horizontal">Horizontal — anak-anak berbaris ke samping</option>
+          <option value="vertical">Vertikal — anak-anak bertumpuk ke bawah</option>
+        </select>
+      </label>
+      <p class="modal__hint">
+        Ini mengatur susunan <strong>bawaan</strong> untuk anak-anak dari jabatan ini.
+        Anak yang sudah punya pengaturan "Susunan Sendiri" (di formulirnya masing-masing)
+        akan tetap memakai pengaturannya sendiri, mengabaikan ini.
+      </p>
+      <label>Keterangan <span class="opt">(opsional)</span>
+        <textarea id="fieldKeterangan" rows="3" placeholder="cth. Merangkap Plt. Manajer Logistik"></textarea>
+      </label>
+      <label>Bezetting <span class="opt">(opsional)</span>
+        <input type="text" id="fieldBezetting" placeholder="cth. 2 dari 3 formasi">
+      </label>
+      <input type="hidden" id="fieldId">
+    </div>
+    <div class="modal__foot">
+      <button class="btn btn--danger" id="btnDeleteNode">Hapus</button>
+      <div class="modal__foot-right">
+        <button class="btn" id="btnCancelNode">Batal</button>
+        <button class="btn btn--primary" id="btnSaveNode">Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GITHUB SETTINGS MODAL ===== -->
+<div class="modal-backdrop" id="githubModalBackdrop">
+  <div class="modal">
+    <div class="modal__head">
+      <h3>Pengaturan Sinkronisasi GitHub</h3>
+      <button class="modal__close" id="githubModalClose">×</button>
+    </div>
+    <div class="modal__body">
+      <p class="modal__hint">
+        Data akan dibaca/ditulis sebagai berkas <code>.xlsx</code> di repositori GitHub Anda melalui GitHub API,
+        langsung dari peramban — tidak perlu server tambahan.
+      </p>
+      <label>Pemilik / Organisasi (owner)
+        <input type="text" id="ghOwner" placeholder="cth. namaperusahaan">
+      </label>
+      <label>Nama Repositori
+        <input type="text" id="ghRepo" placeholder="cth. bagan-organisasi">
+      </label>
+      <label>Cabang (branch)
+        <input type="text" id="ghBranch" placeholder="main" value="main">
+      </label>
+      <label>Path Berkas dalam Repo
+        <input type="text" id="ghPath" placeholder="data/struktur-organisasi.xlsx" value="data/struktur-organisasi.xlsx">
+      </label>
+      <label>Personal Access Token (PAT)
+        <input type="password" id="ghToken" placeholder="ghp_… (izin: Contents Read & Write)">
+      </label>
+      <p class="modal__warning">
+        ⚠ Token disimpan hanya di penyimpanan lokal peramban ini (localStorage), tidak pernah dikirim ke
+        pihak lain selain <code>api.github.com</code>. Gunakan token <em>fine-grained</em> yang dibatasi
+        hanya untuk repositori ini, dan jangan pakai perangkat/peramban bersama untuk menyimpannya.
+      </p>
+    </div>
+    <div class="modal__foot">
+      <span class="modal__test" id="ghTestResult"></span>
+      <div class="modal__foot-right">
+        <button class="btn" id="btnGithubCancel">Batal</button>
+        <button class="btn btn--primary" id="btnGithubSave">Simpan Pengaturan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<!-- ===== SELECTION BAR (mode pilih banyak) ===== -->
+<div class="selection-bar" id="selectionBar">
+  <span><span class="selection-bar__count" id="selectionCount">0</span> jabatan dipilih</span>
+  <button class="btn btn--sm" id="btnSetVertical">⇅ Susun Vertikal (tumpuk)</button>
+  <button class="btn btn--sm" id="btnSetHorizontal">⇄ Susun Horizontal (baris)</button>
+  <button class="btn btn--sm" id="btnClearOverride">Ikuti Atasan</button>
+  <button class="btn btn--sm" id="btnCancelSelection">Batal</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="js/store.js?v=14"></script>
+<script src="js/xlsx-io.js?v=14"></script>
+<script src="js/github-sync.js?v=14"></script>
+<script src="js/chart-render.js?v=14"></script>
+<script src="js/app.js?v=14"></script>
+</body>
+</html>

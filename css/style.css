@@ -1,0 +1,765 @@
+/* ============================================================
+   TOKENS
+   Concept: technical "blueprint / title block" drawing.
+   The chart canvas reads like a schematic sheet; the header
+   mimics an architectural drawing title block, because this
+   app's real job is turning a spreadsheet into a structural
+   drawing of the organisation.
+   ============================================================ */
+:root{
+  --paper:        #F3F5F1;
+  --paper-line:   #E1E4DA;
+  --ink:          #1B2430;
+  --ink-soft:     #5B6472;
+  --ink-faint:    #8B94A1;
+  --line:         #D7DCE2;
+  --connector:    #7B8794; /* garis penghubung antar-jabatan — sengaja lebih gelap/kontras dari --line agar jelas terlihat */
+  --panel:        #FFFFFF;
+
+  --accent-navy:    #24425E;
+  --accent-navy-2:  #142534;
+  --accent-teal:    #1F8A76;
+  --accent-mustard: #DDA83A;
+  --accent-clay:    #C46A44;
+  --accent-danger:  #C24A33;
+
+  --display: 'Space Grotesk', sans-serif;
+  --body: 'Inter', sans-serif;
+  --mono: 'IBM Plex Mono', monospace;
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 2px 4px rgba(20,37,52,.06), 0 10px 24px -8px rgba(20,37,52,.14);
+  --shadow-hover: 0 6px 14px rgba(20,37,52,.10), 0 20px 40px -12px rgba(20,37,52,.22);
+}
+
+*{ box-sizing: border-box; }
+
+html,body{
+  margin:0; padding:0; height:100%;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+}
+body{
+  display:flex;
+  flex-direction:column;
+  height:100vh;
+  overflow:hidden;
+}
+
+button, input, select{ font-family: var(--body); }
+
+/* ============================================================
+   TITLE BLOCK
+   ============================================================ */
+.titleblock{
+  flex: 0 0 auto;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:24px;
+  padding:20px 28px;
+  background:
+    radial-gradient(600px 140px at 12% 0%, rgba(221,168,58,.15), transparent),
+    linear-gradient(135deg, var(--accent-navy), var(--accent-navy-2));
+  color:#EDEFEA;
+  border-bottom: 3px solid var(--accent-mustard);
+  position:relative;
+  overflow:hidden;
+}
+.titleblock::after{
+  content:"";
+  position:absolute; inset:0;
+  background-image: linear-gradient(115deg, transparent 0 48%, rgba(255,255,255,.035) 48% 52%, transparent 52% 100%);
+  pointer-events:none;
+}
+.titleblock__id{ display:flex; align-items:flex-end; gap:16px; }
+.titleblock__mark{
+  font-family: var(--mono);
+  font-size:12px;
+  letter-spacing:.12em;
+  color: var(--accent-mustard);
+  border:1px solid rgba(237,239,234,.35);
+  padding:4px 8px;
+  border-radius: var(--radius);
+}
+.titleblock__title h1{
+  font-family: var(--display);
+  font-weight:700;
+  font-size:22px;
+  margin:0;
+  outline:none;
+}
+.titleblock__title h1:focus{ text-decoration: underline dotted var(--accent-mustard); }
+.titleblock__sub{
+  margin:2px 0 0;
+  font-size:12px;
+  color:#B9C2CE;
+  font-family: var(--mono);
+}
+.titleblock__status{ text-align:right; }
+.status__row{ display:flex; align-items:center; gap:8px; justify-content:flex-end; font-size:13px; }
+.status__meta{ color:#B9C2CE; font-family: var(--mono); font-size:11px; margin-top:4px; }
+.status__sep{ opacity:.5; }
+.status__dot{
+  width:8px; height:8px; border-radius:50%;
+  background: var(--accent-clay);
+  display:inline-block;
+}
+.status__dot.ok{ background: var(--accent-teal); }
+.status__dot.busy{ background: var(--accent-mustard); animation: pulse 1s infinite ease-in-out; }
+@keyframes pulse{ 50%{ opacity:.35; } }
+
+/* ============================================================
+   TOOLBAR
+   ============================================================ */
+.toolbar{
+  flex: 0 0 auto;
+  display:flex;
+  align-items:center;
+  gap:18px;
+  padding:10px 28px;
+  background: var(--panel);
+  border-bottom:1px solid var(--paper-line);
+  flex-wrap:wrap;
+  z-index:20;
+}
+.toolbar__group{ display:flex; gap:8px; align-items:center; }
+.toolbar__group--right{ margin-left:auto; }
+
+.btn{
+  font-family: var(--body);
+  font-size:13px;
+  font-weight:600;
+  padding:8px 14px;
+  border-radius: var(--radius-sm);
+  border:1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  cursor:pointer;
+  transition: border-color .15s, background .15s, transform .1s, box-shadow .15s;
+  white-space:nowrap;
+}
+.btn:hover{ border-color: var(--accent-navy); transform: translateY(-1px); box-shadow: 0 4px 10px rgba(20,37,52,.10); }
+.btn:active{ transform: translateY(0); }
+.btn:disabled{
+  opacity:.4; cursor:not-allowed;
+  transform:none !important; box-shadow:none !important; border-color: var(--line) !important;
+}
+.btn--primary{ background: var(--accent-navy); color:#fff; border-color: var(--accent-navy); box-shadow: 0 2px 8px rgba(36,66,94,.35); }
+.btn--primary:hover{ background:#1b3348; box-shadow: 0 6px 16px rgba(36,66,94,.4); }
+.btn--accent{ background: var(--accent-teal); color:#fff; border-color: var(--accent-teal); box-shadow: 0 2px 8px rgba(31,138,118,.35); }
+.btn--accent:hover{ background:#187a68; box-shadow: 0 6px 16px rgba(31,138,118,.4); }
+.btn--danger{ background:#fff; color: var(--accent-danger); border-color: var(--accent-danger); }
+.btn--danger:hover{ background: var(--accent-danger); color:#fff; }
+.btn--file{ display:inline-flex; align-items:center; }
+.btn--icon{ padding:6px 10px; }
+.btn--sm{ padding:5px 10px; font-size:12px; }
+.btn--active{
+  background: var(--accent-navy); color:#fff; border-color: var(--accent-navy);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.4);
+}
+
+.search{
+  padding:8px 12px;
+  border:1px solid var(--line);
+  border-radius: var(--radius);
+  font-size:13px;
+  min-width:200px;
+}
+.zoom{ display:flex; align-items:center; gap:6px; font-family: var(--mono); font-size:12px; }
+
+/* ============================================================
+   FOCUS BANNER
+   ============================================================ */
+.focus-banner{
+  display:none;
+  flex: 0 0 auto;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:8px 28px;
+  background: #EAF1F7;
+  border-bottom:1px solid #D3E2ED;
+  font-size:12.5px;
+  color: var(--accent-navy);
+}
+.focus-banner.show{ display:flex; }
+.focus-banner__label{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+/* ============================================================
+   CANVAS
+   ============================================================ */
+.canvas-wrap{
+  position:relative;
+  overflow:auto;
+  flex: 1 1 auto;
+  min-height:0;
+  background-image:
+    linear-gradient(var(--paper-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-color: var(--paper);
+  cursor: default;
+}
+.canvas-wrap.no-grid{ background-image: none; }
+/* mode "tangan" (hand tool): seret di mana saja untuk menggeser tampilan */
+.canvas-wrap.pan-mode{ cursor: grab; }
+.canvas-wrap.panning{ cursor: grabbing !important; user-select: none; }
+.canvas-wrap.panning .node-card{ pointer-events:none; } /* cegah hover/klik kartu ikut terpicu saat menyeret */
+
+.canvas-grid{
+  /* PENTING: jangan pakai flex + justify-content:center di sini.
+     Kombinasi itu membuat sisi kiri konten yang meluber (overflow)
+     TIDAK BISA di-scroll sama sekali di banyak peramban — itulah
+     penyebab bagan "terbatas" saat digeser ke kiri. text-align:center
+     pada elemen block tidak punya masalah ini karena scrollWidth
+     tetap dihitung penuh dari kedua sisi. */
+  display:block;
+  text-align:center;
+  min-width:100%;
+  min-height:100%;
+  padding:60px 60px 140px;
+  transform-origin: top center;
+}
+.tree{ text-align:center; }
+
+.empty-state{
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  text-align:center;
+  max-width:380px;
+  color: var(--ink-soft);
+  background: var(--panel);
+  border:1px solid var(--paper-line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding:32px 28px;
+}
+.empty-state__eyebrow{
+  font-family: var(--mono);
+  font-size:11px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color: var(--accent-clay);
+  margin:0 0 8px;
+}
+.empty-state h2{ font-family: var(--display); margin:0 0 8px; color: var(--ink); }
+.empty-state p{ font-size:14px; line-height:1.5; }
+.canvas-wrap.has-data .empty-state{ display:none; }
+
+/* ============================================================
+   TREE
+   Teknik konektor CSS murni: <ul class="tree">, tiap simpul <li>
+   berisi .node-card. Garis digambar dengan ::before/::after pada li.
+   ============================================================ */
+.tree, .tree ul{
+  list-style:none;
+  margin:0; padding:0;
+  text-align:center;
+}
+/* ===== Variabel jarak garis ===================================
+   GAP  = total jarak vertikal antara kartu atasan & baris bawahan.
+   OFFSET = separuh dari GAP — dipakai agar ada batang garis yang
+   terlihat jelas SEBELUM garis bus horizontal (dari kotak atasan),
+   dan batang lain SESUDAH garis bus (turun ke kotak bawahan) —
+   bukan bus yang langsung menempel ke salah satu kotak. */
+.tree{ display:inline-flex; --gap:48px; --offset:24px; }
+.tree ul{
+  display:flex;
+  padding-top:var(--gap, 48px);
+  position:relative;
+}
+.tree li{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:0 14px;
+  position:relative;
+}
+/* batang garis dari kotak atasan turun ke garis bus (bukan langsung ke kotak bawahan) */
+.tree li.has-children > .node-shell::after{
+  content:"";
+  position:absolute;
+  bottom:calc(var(--offset, 24px) * -1); left:50%;
+  width:2px; margin-left:-1px; height:var(--offset, 24px);
+  background: var(--connector);
+  pointer-events:none; /* garis dekoratif tidak boleh mencegat klik */
+}
+.node-shell{ position:relative; }
+
+/* garis bus horizontal + batang turun ke tiap kotak bawahan.
+   PENTING soal geometri: kotak pemicu garis ini HARUS berada di celah
+   kosong DI ATAS kartu (top negatif), bukan menimpa bagian atas kartu
+   itu sendiri — kalau tidak, garis vertikalnya akan menembus sampai ke
+   teks nama jabatan. Tinggi kotak ini (var(--offset)) HANYA separuh
+   dari total celah (var(--gap)), sehingga ada jarak simetris: separuh
+   dipakai batang dari atasan (di atas), separuh lagi batang turun ke
+   bawahan (di sini) — bus line tidak mepet ke kotak manapun.
+
+   PENTING soal klik: pointer-events:none WAJIB ada. Tanpa ini, kotak
+   (invisible tapi tetap "solid" untuk hit-testing) bisa menutupi pojok
+   kartu di sekitarnya dan mencegat klik ikon aksi. */
+.tree ul li::before{
+  content:"";
+  position:absolute;
+  top:calc(var(--offset, 24px) * -1); right:50%;
+  width:50%; height:var(--offset, 24px);
+  border-top:2px solid var(--connector);
+  pointer-events:none;
+}
+.tree ul li::after{
+  content:"";
+  position:absolute;
+  top:calc(var(--offset, 24px) * -1); left:50%;
+  width:50%; height:var(--offset, 24px);
+  border-top:2px solid var(--connector);
+  /* Garis TURUN ke kartu ini sendiri. WAJIB berlaku untuk SETIAP anak,
+     bukan cuma yang pertama/terakhir — kalau tidak, anak-anak di
+     TENGAH (mis. Inspektur II/III/IV di antara 5 bersaudara) cuma
+     dilewati garis bus horizontal tanpa punya cabang turun sendiri. */
+  border-left:2px solid var(--connector);
+  pointer-events:none;
+}
+.tree ul li:first-child::before{ display:none; } /* anak pertama: tak ada saudara di kiri untuk disambung */
+.tree ul li:last-child::after{ border-top:none; } /* anak terakhir: tetap perlu garis turun (border-left tetap ada), hanya sambungan bus ke kanan yang dihapus */
+.tree ul li:only-child::before{ display:none; }
+.tree ul li:only-child::after{
+  top:calc(var(--offset, 24px) * -1);
+  left:50%; right:auto; width:0;
+  border-top:none;
+  border-left:2px solid var(--connector);
+  pointer-events:none;
+}
+.tree > li{ padding-top:0; }
+.tree > li::before, .tree > li::after{ display:none; }
+
+/* ================================================================
+   ORIENTASI PER CABANG — setiap jabatan bisa mengatur SENDIRI apakah
+   anak-anaknya ditampilkan sebagai baris ke bawah (vertikal, default)
+   atau kolom ke samping (horizontal, class "branch-h"). Class ini
+   dipasang pada <ul> anak tertentu dan <li> induknya secara terpisah
+   oleh chart-render.js, TIDAK di-cascade dari root — sehingga dalam
+   satu bagan yang sama, sebagian cabang bisa vertikal dan sebagian
+   lain horizontal secara bersamaan, sesuai jabatan mana yang diatur.
+   Aturan di sini memakai selector langsung (ul.branch-h / li tertentu)
+   supaya HANYA mempengaruhi cabang itu sendiri, bukan seluruh pohon,
+   dan tidak "bocor" ke cabang bersarang di bawahnya kecuali cabang itu
+   juga diberi class branch-h sendiri.
+   ================================================================ */
+ul.branch-h{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  padding-top:0;
+  padding-left:var(--gap, 48px);
+  text-align:left;
+}
+ul.branch-h > li{
+  flex-direction:row;
+  align-items:center;
+  padding:10px 0;
+  text-align:left;
+}
+/* PENTING: <li> yang cabang ANAKNYA SENDIRI diatur bertumpuk (branch-h-parent)
+   harus ikut berubah jadi row (kartu di kiri, cabang bertumpuk di kanan) —
+   kalau tetap column (bawaan), cabang <ul class="branch-h"> tetap dirender
+   DI BAWAH kartu (bukan di sampingnya), padahal batang penghubung sudah
+   diarahkan ke KANAN oleh aturan di bawah — inilah sebabnya garis penghubung
+   terlihat terputus/salah arah pada cabang yang diatur "vertikal". */
+li.branch-h-parent{ flex-direction:row; align-items:center; }
+
+/* batang dari kartu induk ke kanan menuju garis bus vertikal cabang ini */
+li.branch-h-parent > .node-shell::after{
+  bottom:auto; left:100%; top:50%;
+  width:var(--offset, 24px); height:2px; margin-left:0; margin-top:-1px;
+}
+/* tombol ciutkan (toggle) HARUS mengikuti arah trunk milik simpul itu
+   SENDIRI (branch-h-parent) — bukan berdasar posisi di dalam ul.branch-h
+   milik induknya (dua hal yang berbeda: "anak dari cabang bertumpuk" vs
+   "induk yang cabangnya sendiri bertumpuk"). Aturan lama keliru memakai
+   selector `ul.branch-h > li`, sehingga toggle milik kartu INDUK (yang
+   cabangnya sendiri diatur bertumpuk, tapi dia sendiri berada di ul
+   normal) tidak pernah ikut pindah ke kanan. */
+li.branch-h-parent > .node-shell > .toggle-btn{
+  bottom:auto; left:auto; top:50%; right:-9px;
+  transform:translateY(-50%);
+}
+
+/* garis bus vertikal + batang mendatar ke tiap kartu dalam cabang horizontal */
+ul.branch-h > li::before{
+  top:0; right:auto; bottom:50%; left:calc(var(--offset, 24px) * -1);
+  width:var(--offset, 24px); height:50%;
+  border-top:none;
+  border-left:2px solid var(--connector);
+}
+ul.branch-h > li::after{
+  top:50%; left:calc(var(--offset, 24px) * -1); bottom:0;
+  width:var(--offset, 24px); height:50%;
+  border-top:2px solid var(--connector);
+  border-left:2px solid var(--connector);
+}
+ul.branch-h > li:first-child::before{ display:none; }
+/* PENTING: border-top HARUS dideklarasikan ulang di sini secara eksplisit.
+   Ada aturan umum `.tree ul li:last-child::after{ border-top:none; }` untuk
+   mode baris biasa dengan spesifisitas CSS yang PERSIS SAMA — tanpa
+   deklarasi ulang ini, aturan umum itu "menang" secara tidak sengaja untuk
+   anak TERAKHIR dalam cabang bertumpuk, menghapus garis turunnya ke kartu
+   (persis bug yang membuat kartu terakhir kehilangan garis penghubung). */
+ul.branch-h > li:last-child::after{
+  border-left:none;
+  border-top:2px solid var(--connector);
+}
+ul.branch-h > li:only-child::before{ display:none; }
+ul.branch-h > li:only-child::after{
+  left:calc(var(--offset, 24px) * -1);
+  top:50%; bottom:auto; height:0;
+  border-left:none;
+  border-top:2px solid var(--connector);
+}
+
+/* ================================================================
+   DUA CABANG SEKALIGUS — sebagian anak berbaris (bawah), sebagian
+   lain bertumpuk (kanan), keduanya di bawah INDUK YANG SAMA secara
+   bersamaan. Ini terjadi ketika ada anak yang mengatur "Susunan
+   Sendiri"-nya sendiri berbeda dari saudara-saudaranya. <li> induk
+   memakai CSS Grid: kartu induk di kiri-atas, cabang bertumpuk di
+   kanannya, cabang baris di bawah (melebar penuh).
+   ================================================================ */
+.tree li.dual-branch{
+  display:grid;
+  grid-template-columns:max-content 1fr;
+  align-items:start;
+}
+.tree li.dual-branch > .node-shell{ grid-column:1; grid-row:1; }
+.tree li.dual-branch > ul.branch-h{ grid-column:2; grid-row:1; align-self:center; }
+.tree li.dual-branch > ul:not(.branch-h){ grid-column:1 / -1; grid-row:2; }
+.tree li.dual-branch > .node-shell::before{
+  content:"";
+  position:absolute;
+  top:50%; left:100%;
+  width:var(--offset, 24px); height:2px; margin-top:-1px;
+  background: var(--connector);
+  pointer-events:none;
+}
+
+/* penanda visual kecil di pojok kartu yang orientasi cabangnya diatur
+   manual (bukan mengikuti default bagan) — memudahkan menelusuri
+   cabang mana saja yang sudah disetel berbeda */
+.node-card.orientation-override::before{
+  content:"";
+  background: linear-gradient(90deg, var(--accent-mustard), var(--accent-clay)) !important;
+}
+
+/* mode "pilih banyak" untuk mengatur orientasi beberapa jabatan sekaligus */
+.canvas-wrap.select-mode .node-card{ cursor:pointer; }
+.node-card.selected{
+  outline:2px solid var(--accent-teal);
+  outline-offset:2px;
+  box-shadow: 0 0 0 4px rgba(31,138,118,.15);
+}
+.selection-bar{
+  display:none;
+  position:fixed;
+  left:50%; bottom:24px;
+  transform:translateX(-50%);
+  background: var(--ink);
+  color:#fff;
+  padding:10px 14px;
+  border-radius: 999px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.3);
+  align-items:center;
+  gap:10px;
+  z-index:150;
+  font-size:13px;
+}
+.selection-bar.show{ display:flex; }
+.selection-bar .btn{ padding:6px 12px; font-size:12.5px; }
+.selection-bar__count{ font-family: var(--mono); color: var(--accent-mustard); font-weight:600; padding:0 2px; }
+
+.node-card{
+  width:224px;
+  background: var(--panel);
+  border:1px solid var(--paper-line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding:14px 14px 10px;
+  cursor:pointer;
+  position:relative;
+  text-align:left;
+  animation: cardIn .28s ease both;
+  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+}
+@keyframes cardIn{
+  from{ opacity:0; transform: translateY(6px) scale(.97); }
+  to{ opacity:1; transform: translateY(0) scale(1); }
+}
+.node-card::before{
+  content:"";
+  position:absolute; top:0; left:0; right:0; height:4px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: linear-gradient(90deg, var(--dot-a, var(--accent-navy)), var(--dot-b, var(--accent-teal)));
+  pointer-events:none;
+}
+.node-card:hover{
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-hover);
+  border-color: transparent;
+}
+.node-card.match{ outline:2px solid var(--accent-mustard); outline-offset:2px; }
+.node-card.dim{ opacity:.32; }
+
+.node-card__head{ display:flex; align-items:flex-start; gap:10px; padding-right:74px; }
+.node-avatar{
+  flex:0 0 auto;
+  width:36px; height:36px;
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-family: var(--display);
+  font-weight:700;
+  font-size:12.5px;
+  color:#fff;
+  background: linear-gradient(135deg, var(--dot-a, var(--accent-navy)), var(--dot-b, var(--accent-teal)));
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+}
+.node-card__id{ min-width:0; flex:1; display:flex; align-items:center; }
+.node-card__title{
+  font-family: var(--display); font-weight:600; font-size:15px;
+  margin:0; color: var(--ink);
+  line-height:1.3;
+  overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+}
+.node-card__ket{
+  margin:8px 0 0;
+  font-size:11.5px;
+  font-style:italic;
+  color: var(--ink-faint);
+  line-height:1.4;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.node-card__actions{
+  position:absolute; top:8px; right:8px;
+  display:flex; gap:4px;
+  opacity:.55; /* selalu terlihat samar — hover hanya mempertegas, tidak memunculkan dari nol */
+  transition:opacity .12s;
+}
+.node-card:hover .node-card__actions,
+.node-card:focus-within .node-card__actions{ opacity:1; }
+.node-mini-btn{
+  width:22px; height:22px;
+  border-radius:6px;
+  border:1px solid var(--line);
+  background:#fff;
+  font-size:12px;
+  line-height:1;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.node-mini-btn:hover{ background: var(--accent-navy); color:#fff; border-color: var(--accent-navy); }
+
+.node-card__meta{
+  margin-top:8px;
+  padding-top:7px;
+  border-top:1px dashed var(--paper-line);
+  display:flex; justify-content:flex-end; flex-wrap:wrap; gap:5px;
+}
+.badge{
+  font-family: var(--mono);
+  font-size:10px;
+  color: var(--ink-faint);
+  background: var(--paper);
+  border:1px solid var(--paper-line);
+  border-radius:999px;
+  padding:2px 8px;
+  white-space:nowrap;
+}
+.badge--bezetting{
+  color: var(--accent-navy);
+  background: #EAF1F7;
+  border-color: #D3E2ED;
+  font-weight:600;
+}
+.badge--orientation{
+  color: var(--accent-clay);
+  background: #FBF0E8;
+  border-color: #F0DBC9;
+}
+.badge--self{
+  color: #6B5CA5;
+  background: #F1EEFA;
+  border-color: #DDD5F0;
+}
+
+.toggle-btn{
+  position:absolute; bottom:-9px; left:50%; transform:translateX(-50%);
+  width:19px; height:19px;
+  border-radius:50%;
+  border:1px solid var(--line);
+  background:#fff;
+  font-size:11px; line-height:1;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  color: var(--ink-soft);
+  box-shadow: 0 1px 3px rgba(0,0,0,.12);
+  transition: background .12s, color .12s, border-color .12s;
+}
+.toggle-btn:hover{ border-color: var(--accent-navy); color:#fff; background: var(--accent-navy); }
+
+/* depth accent colors cycle — pair of gradient stops per level */
+.depth-0{ --dot-a: var(--accent-navy);    --dot-b: #3E6C93; }
+.depth-1{ --dot-a: var(--accent-teal);    --dot-b: #57C2A6; }
+.depth-2{ --dot-a: var(--accent-mustard); --dot-b: #F0C468; }
+.depth-3{ --dot-a: var(--accent-clay);    --dot-b: #E08A61; }
+.depth-4{ --dot-a: var(--accent-navy);    --dot-b: var(--accent-teal); }
+
+/* ============================================================
+   GROUP CARD — "Pelaksana" & "Jabatan Fungsional"
+   Kelompok jabatan yang dikumpulkan dalam satu kotak terpisah
+   (bukan kotak individual per orang) di bawah atasannya.
+   ============================================================ */
+.group-card{
+  width:300px;
+  background: var(--panel);
+  border:1px solid var(--paper-line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow:hidden;
+  text-align:left;
+  animation: cardIn .28s ease both;
+}
+.group-card__head{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:9px 12px;
+  color:#fff;
+  font-family: var(--display); font-weight:600; font-size:13px;
+}
+.group-card--pelaksana .group-card__head{ background: linear-gradient(90deg, #6B5CA5, #8B7FC7); }
+.group-card--fungsional .group-card__head{ background: linear-gradient(90deg, #C4762A, #E0973F); }
+.group-card__head .group-add-btn{ background:rgba(255,255,255,.18); border-color:rgba(255,255,255,.4); color:#fff; }
+.group-card__head .group-add-btn:hover{ background:#fff; color: var(--ink); }
+
+.group-card__table{ width:100%; border-collapse:collapse; font-size:11.5px; }
+.group-card__table th{
+  text-align:left; font-family: var(--mono); font-weight:500; font-size:10px;
+  color: var(--ink-faint); text-transform:uppercase; letter-spacing:.04em;
+  padding:6px 10px; border-bottom:1px solid var(--paper-line);
+  background: var(--paper);
+}
+.group-card__table td{
+  padding:6px 10px; border-bottom:1px solid var(--paper-line);
+  color: var(--ink); vertical-align:top;
+}
+.group-card__table tr:last-child td{ border-bottom:none; }
+.group-card__table td:last-child{ text-align:right; white-space:nowrap; }
+.group-row-edit{
+  width:20px; height:20px; border-radius:5px; border:1px solid var(--line);
+  background:#fff; font-size:11px; cursor:pointer;
+  display:inline-flex; align-items:center; justify-content:center;
+}
+.group-row-edit:hover{ background: var(--accent-navy); color:#fff; border-color: var(--accent-navy); }
+
+/* ============================================================
+   MODALS
+   ============================================================ */
+.modal-backdrop{
+  display:none;
+  position:fixed; inset:0;
+  background: rgba(27,36,48,.45);
+  align-items:center; justify-content:center;
+  z-index:100;
+}
+.modal-backdrop.open{ display:flex; }
+.modal{
+  background:#fff;
+  width:440px; max-width:92vw;
+  max-height:88vh;
+  overflow:auto;
+  border-radius: 14px;
+  box-shadow: 0 24px 70px rgba(0,0,0,.28);
+}
+.modal__head{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:16px 20px;
+  border-bottom:1px solid var(--paper-line);
+}
+.modal__head h3{ margin:0; font-family: var(--display); font-size:16px; }
+.modal__close{
+  border:none; background:none; font-size:20px; cursor:pointer; color: var(--ink-soft);
+}
+.modal__body{ padding:16px 20px; display:flex; flex-direction:column; gap:12px; }
+.modal__body label{
+  font-size:12px; font-weight:600; color: var(--ink-soft);
+  display:flex; flex-direction:column; gap:4px;
+}
+.req{ color: var(--accent-danger); }
+.opt{ color: var(--ink-faint); font-weight:400; text-transform:none; letter-spacing:0; }
+.modal__body input, .modal__body select, .modal__body textarea{
+  font-size:14px; font-weight:400; color: var(--ink);
+  font-family: var(--body);
+  padding:9px 10px;
+  border:1px solid var(--line);
+  border-radius: var(--radius-sm);
+  resize: vertical;
+  transition: border-color .12s, box-shadow .12s;
+}
+.modal__body input:focus, .modal__body select:focus, .modal__body textarea:focus{
+  outline:none;
+  border-color: var(--accent-navy);
+  box-shadow: 0 0 0 3px rgba(36,66,94,.12);
+}
+.modal__hint{ font-size:12.5px; color: var(--ink-soft); line-height:1.5; margin:0; }
+.modal__warning{
+  font-size:12px; line-height:1.5; color: var(--accent-clay);
+  background:#FBF3EC; border:1px solid #F0DFCF;
+  padding:10px 12px; border-radius: var(--radius); margin:0;
+}
+.modal__foot{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:14px 20px; border-top:1px solid var(--paper-line);
+}
+.modal__foot-right{ display:flex; gap:8px; }
+.modal__test{ font-size:12px; font-family: var(--mono); }
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+.toast{
+  position:fixed; bottom:20px; left:50%; transform:translate(-50%,20px);
+  background: var(--ink); color:#fff;
+  padding:10px 18px; border-radius: var(--radius);
+  font-size:13px;
+  opacity:0; pointer-events:none;
+  transition: opacity .2s, transform .2s;
+  z-index:200;
+}
+.toast.show{ opacity:1; transform:translate(-50%,0); }
+.toast.err{ background: var(--accent-danger); }
+.toast.ok{ background: var(--accent-teal); }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 780px){
+  .titleblock{ flex-direction:column; align-items:flex-start; gap:10px; }
+  .titleblock__status{ text-align:left; }
+  .status__row{ justify-content:flex-start; }
+  .toolbar{ gap:10px; }
+  .toolbar__group--right{ margin-left:0; width:100%; }
+  .search{ flex:1; min-width:0; }
+  .node-card__actions{ opacity:1; } /* tak ada hover di layar sentuh */
+}
+@media (hover: none){
+  .node-card__actions{ opacity:1; }
+}
+
+/* reduced motion */
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+}
+
+:focus-visible{ outline:2px solid var(--accent-mustard); outline-offset:2px; }
