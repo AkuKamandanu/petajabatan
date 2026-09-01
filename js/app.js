@@ -44,6 +44,10 @@
     fieldSusunan: $('#fieldSusunan'),
     fieldKeterangan: $('#fieldKeterangan'),
     fieldBezetting: $('#fieldBezetting'),
+    fieldKelasJabatan: $('#fieldKelasJabatan'),
+    fieldKebutuhan: $('#fieldKebutuhan'),
+    fieldKekuranganKelebihan: $('#fieldKekuranganKelebihan'),
+    fieldAbk: $('#fieldAbk'),
     fieldId: $('#fieldId'),
     btnDeleteNode: $('#btnDeleteNode'),
     btnSaveNode: $('#btnSaveNode'),
@@ -281,6 +285,10 @@
     els.fieldJabatan.value = '';
     els.fieldKeterangan.value = '';
     els.fieldBezetting.value = '';
+    els.fieldKelasJabatan.value = '';
+    els.fieldKebutuhan.value = '';
+    els.fieldKekuranganKelebihan.value = '';
+    els.fieldAbk.value = '';
     populateAtasanOptions(null);
     els.fieldAtasan.value = parentId || '';
     els.fieldKategori.value = presetKategori || '';
@@ -301,6 +309,10 @@
     els.fieldJabatan.value = emp.jabatan;
     els.fieldKeterangan.value = emp.keterangan;
     els.fieldBezetting.value = emp.bezetting;
+    els.fieldKelasJabatan.value = emp.kelasJabatan || '';
+    els.fieldKebutuhan.value = emp.kebutuhan || '';
+    els.fieldKekuranganKelebihan.value = emp.kekuranganKelebihan || '';
+    els.fieldAbk.value = emp.abk || '';
     populateAtasanOptions(emp.id);
     els.fieldAtasan.value = emp.parentId || '';
     els.fieldKategori.value = emp.kategori || '';
@@ -325,6 +337,10 @@
       parentId: els.fieldAtasan.value || '',
       keterangan: els.fieldKeterangan.value.trim(),
       bezetting: els.fieldBezetting.value.trim(),
+      kelasJabatan: els.fieldKelasJabatan.value.trim(),
+      kebutuhan: els.fieldKebutuhan.value.trim(),
+      kekuranganKelebihan: els.fieldKekuranganKelebihan.value.trim(),
+      abk: els.fieldAbk.value.trim(),
       kategori: els.fieldKategori.value || '',
       childOrientation: els.fieldOrientasi.value || '',
       selfArrangement: els.fieldSusunan.value || '',
@@ -368,15 +384,36 @@
   }
   function closeGithubModal() { els.githubModalBackdrop.classList.remove('open'); }
 
+  // Kalau seseorang menempel URL GitHub lengkap (mis. "https://github.com/nama/repo")
+  // ke kolom Owner atau Repo, uraikan otomatis jadi owner+repo yang benar,
+  // supaya tidak menghasilkan alamat API yang salah bentuk.
+  function parseOwnerRepoInput(ownerRaw, repoRaw) {
+    let owner = ownerRaw.trim();
+    let repo = repoRaw.trim();
+    const urlMatch = owner.match(/github\.com\/([^\/\s]+)\/([^\/\s?#]+)/i);
+    if (urlMatch) {
+      owner = urlMatch[1];
+      if (!repo) repo = urlMatch[2].replace(/\.git$/i, '');
+    }
+    owner = owner.replace(/^@/, '').trim();
+    repo = repo.replace(/\.git$/i, '').trim();
+    return { owner, repo };
+  }
+
   async function saveGithubSettings() {
+    const { owner, repo } = parseOwnerRepoInput(els.ghOwner.value, els.ghRepo.value);
     const cfg = {
-      owner: els.ghOwner.value.trim(),
-      repo: els.ghRepo.value.trim(),
-      branch: els.ghBranch.value.trim() || 'main',
-      path: els.ghPath.value.trim() || 'data/struktur-organisasi.xlsx',
+      owner,
+      repo,
+      branch: els.ghBranch.value.trim().replace(/^\/+|\/+$/g, '') || 'main',
+      path: els.ghPath.value.trim().replace(/^\/+/, '') || 'data/struktur-organisasi.xlsx',
       token: els.ghToken.value.trim(),
     };
     if (!cfg.owner || !cfg.repo) { toast('Owner dan nama repo wajib diisi.', 'err'); return; }
+    // Sinkronkan kembali ke kolom form kalau tadi ada yang otomatis dibersihkan,
+    // supaya orang bisa lihat persis apa yang akan dipakai.
+    els.ghOwner.value = cfg.owner;
+    els.ghRepo.value = cfg.repo;
     els.ghTestResult.textContent = 'Menguji koneksi…';
     try {
       await GithubSync.testConnection(cfg);

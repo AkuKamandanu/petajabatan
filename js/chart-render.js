@@ -27,7 +27,7 @@ const ChartRender = (() => {
 
   function matches(emp) {
     if (!searchTerm) return null;
-    const hay = `${emp.jabatan} ${emp.keterangan} ${emp.bezetting}`.toLowerCase();
+    const hay = `${emp.jabatan} ${emp.keterangan} ${emp.bezetting} ${emp.kelasJabatan} ${emp.kebutuhan} ${emp.kekuranganKelebihan} ${emp.abk}`.toLowerCase();
     return hay.includes(searchTerm);
   }
 
@@ -49,11 +49,24 @@ const ChartRender = (() => {
                 <span class="group-card__title">${escapeHtml(label)}</span>
                 <button class="node-mini-btn group-add-btn" data-kategori="${kategori}" title="Tambah ${escapeHtml(label)}">+</button>
               </div>`;
-    html += `<table class="group-card__table"><thead><tr><th>Jabatan</th><th>Bezetting</th><th>Keterangan</th><th></th></tr></thead><tbody>`;
+    html += `<table class="group-card__table"><thead><tr>
+                <th>Jabatan</th>
+                <th title="Kelas Jabatan">KLS</th>
+                <th title="Bezetting">B</th>
+                <th title="Kebutuhan">K</th>
+                <th title="Kekurangan/Kelebihan Pegawai">+/-</th>
+                <th title="Analisis Beban Kerja">ABK</th>
+                <th title="Keterangan">Ket.</th>
+                <th></th>
+              </tr></thead><tbody>`;
     items.forEach(it => {
       html += `<tr>
         <td>${escapeHtml(it.jabatan) || '(tanpa nama)'}</td>
+        <td>${escapeHtml(it.kelasJabatan) || '—'}</td>
         <td>${escapeHtml(it.bezetting) || '—'}</td>
+        <td>${escapeHtml(it.kebutuhan) || '—'}</td>
+        <td>${escapeHtml(it.kekuranganKelebihan) || '—'}</td>
+        <td>${escapeHtml(it.abk) || '—'}</td>
         <td>${escapeHtml(it.keterangan) || '—'}</td>
         <td><button class="group-row-edit" data-id="${escapeHtml(it.id)}" title="Sunting">✎</button></td>
       </tr>`;
@@ -129,12 +142,31 @@ const ChartRender = (() => {
                 <p class="node-card__title">${escapeHtml(emp.jabatan) || '(Jabatan belum diisi)'}</p>
               </div>`;
     html += `</div>`;
-    if (emp.keterangan) {
-      html += `<p class="node-card__ket" title="${escapeHtml(emp.keterangan)}">${escapeHtml(emp.keterangan)}</p>`;
+
+    // Data kepegawaian ringkas — hanya singkatan yang tampil di kartu
+    // (nama lengkap tetap dipakai saat mengisi formulir & muncul lewat
+    // tooltip). Urutan: KLS - B - K - +/- - ABK.
+    const dataFacts = [];
+    if (emp.kelasJabatan) dataFacts.push({ label: 'KLS', full: 'Kelas Jabatan', value: emp.kelasJabatan });
+    if (emp.bezetting) dataFacts.push({ label: 'B', full: 'Bezetting', value: emp.bezetting });
+    if (emp.kebutuhan) dataFacts.push({ label: 'K', full: 'Kebutuhan', value: emp.kebutuhan });
+    if (emp.kekuranganKelebihan) dataFacts.push({ label: '+/-', full: 'Kekurangan/Kelebihan Pegawai', value: emp.kekuranganKelebihan });
+    if (emp.abk) dataFacts.push({ label: 'ABK', full: 'Analisis Beban Kerja', value: emp.abk });
+    if (dataFacts.length > 0) {
+      html += `<div class="node-card__facts">`;
+      dataFacts.forEach(f => {
+        html += `<span class="fact-chip" title="${escapeHtml(f.full)}: ${escapeHtml(f.value)}"><span class="fact-chip__label">${escapeHtml(f.label)}</span>${escapeHtml(f.value)}</span>`;
+      });
+      html += `</div>`;
     }
-    if (emp.bezetting || normalKids.length > 0 || emp.childOrientation || emp.selfArrangement) {
+
+    // Keterangan (disingkat "Ket." di kartu, nama lengkap tetap di formulir)
+    if (emp.keterangan) {
+      html += `<p class="node-card__ket" title="Keterangan: ${escapeHtml(emp.keterangan)}"><span class="node-card__ket-label">Ket.</span> ${escapeHtml(emp.keterangan)}</p>`;
+    }
+
+    if (normalKids.length > 0 || emp.childOrientation || emp.selfArrangement) {
       html += `<div class="node-card__meta">`;
-      if (emp.bezetting) html += `<span class="badge badge--bezetting">Bezetting: ${escapeHtml(emp.bezetting)}</span>`;
       if (normalKids.length > 0) html += `<span class="badge">${normalKids.length} bawahan</span>`;
       if (emp.childOrientation) html += `<span class="badge badge--orientation">${emp.childOrientation === 'horizontal' ? '⇄ cabang horizontal' : '⇅ cabang vertikal'}</span>`;
       if (emp.selfArrangement) html += `<span class="badge badge--self">${emp.selfArrangement === 'horizontal' ? '◇ posisi: baris' : '◇ posisi: tumpuk'}</span>`;

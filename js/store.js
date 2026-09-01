@@ -110,8 +110,12 @@ const Store = (() => {
         id,
         jabatan: e.jabatan ?? e.Jabatan ?? '',
         parentId,
-        keterangan: e.keterangan ?? e.Keterangan ?? '',
+        kelasJabatan: e.kelasJabatan ?? e.Kelas_Jabatan ?? '',
         bezetting: e.bezetting ?? e.Bezetting ?? '',
+        kebutuhan: e.kebutuhan ?? e.Kebutuhan ?? '',
+        kekuranganKelebihan: e.kekuranganKelebihan ?? e.Kekurangan_Kelebihan ?? '',
+        abk: e.abk ?? e.ABK ?? '',
+        keterangan: e.keterangan ?? e.Keterangan ?? '',
         kategori,
         childOrientation,
         selfArrangement

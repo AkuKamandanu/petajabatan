@@ -1,26 +1,38 @@
 /**
  * xlsx-io.js
  * Baca/tulis berkas Excel (.xlsx) sebagai "database" bagan organisasi.
- * Kolom yang dipakai: ID, Jabatan, Atasan_ID, Keterangan, Bezetting
+ * Kolom yang dipakai: ID, Jabatan, Atasan_ID, Kelas_Jabatan, Bezetting,
+ * Kebutuhan, Kekurangan_Kelebihan, ABK, Keterangan, Kategori,
+ * Orientasi_Cabang, Susunan_Sendiri
  */
 const XlsxIO = (() => {
   const SHEET_NAME = 'Struktur Organisasi';
-  const COLUMNS = ['ID', 'Jabatan', 'Atasan_ID', 'Keterangan', 'Bezetting', 'Kategori', 'Orientasi_Cabang', 'Susunan_Sendiri'];
+  const COLUMNS = [
+    'ID', 'Jabatan', 'Atasan_ID',
+    'Kelas_Jabatan', 'Bezetting', 'Kebutuhan', 'Kekurangan_Kelebihan', 'ABK', 'Keterangan',
+    'Kategori', 'Orientasi_Cabang', 'Susunan_Sendiri'
+  ];
 
   function employeesToWorkbook(employees) {
     const rows = employees.map(e => ({
       ID: e.id,
       Jabatan: e.jabatan,
       Atasan_ID: e.parentId,
-      Keterangan: e.keterangan,
+      Kelas_Jabatan: e.kelasJabatan,
       Bezetting: e.bezetting,
+      Kebutuhan: e.kebutuhan,
+      Kekurangan_Kelebihan: e.kekuranganKelebihan,
+      ABK: e.abk,
+      Keterangan: e.keterangan,
       Kategori: e.kategori === 'pelaksana' ? 'Pelaksana' : e.kategori === 'fungsional' ? 'Jabatan Fungsional' : '',
       Orientasi_Cabang: e.childOrientation === 'horizontal' ? 'Horizontal' : e.childOrientation === 'vertical' ? 'Vertikal' : '',
       Susunan_Sendiri: e.selfArrangement === 'horizontal' ? 'Horizontal' : e.selfArrangement === 'vertical' ? 'Vertikal' : ''
     }));
     const ws = XLSX.utils.json_to_sheet(rows, { header: COLUMNS });
     ws['!cols'] = [
-      { wch: 14 }, { wch: 28 }, { wch: 14 }, { wch: 36 }, { wch: 14 }, { wch: 18 }, { wch: 16 }, { wch: 16 }
+      { wch: 14 }, { wch: 28 }, { wch: 14 },
+      { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 36 },
+      { wch: 18 }, { wch: 16 }, { wch: 16 }
     ];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, SHEET_NAME);
@@ -62,8 +74,12 @@ const XlsxIO = (() => {
         parentId: row.Atasan_ID === '' || row.Atasan_ID == null || String(row.Atasan_ID).trim() === ''
           ? ''
           : String(row.Atasan_ID).trim(),
-        keterangan: String(row.Keterangan ?? row.keterangan ?? ''),
+        kelasJabatan: String(row.Kelas_Jabatan ?? row.kelas_jabatan ?? ''),
         bezetting: String(row.Bezetting ?? row.bezetting ?? ''),
+        kebutuhan: String(row.Kebutuhan ?? row.kebutuhan ?? ''),
+        kekuranganKelebihan: String(row.Kekurangan_Kelebihan ?? row.kekurangan_kelebihan ?? ''),
+        abk: String(row.ABK ?? row.abk ?? ''),
+        keterangan: String(row.Keterangan ?? row.keterangan ?? ''),
         kategori: normalizeKategori(row.Kategori ?? row.kategori),
         childOrientation: normalizeOrientation(row.Orientasi_Cabang ?? row.orientasi_cabang),
         selfArrangement: normalizeOrientation(row.Susunan_Sendiri ?? row.susunan_sendiri)

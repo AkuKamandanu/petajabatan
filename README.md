@@ -44,14 +44,25 @@ Satu sheet bernama **`Struktur Organisasi`** dengan kolom berikut (baris pertama
 | `ID`         | ✔     | Kode unik simpul, bebas format (mis. `D001`)               |
 | `Jabatan`    | ✔     | Nama jabatan/posisi                                         |
 | `Atasan_ID`  |       | `ID` dari atasan langsung — **kosong** berarti jabatan puncak |
-| `Keterangan` |       | Catatan bebas (opsional), mis. status atau rangkap jabatan  |
-| `Bezetting`  |       | Catatan jumlah pengisi jabatan (opsional), mis. `2 dari 3 formasi` |
+| `Kelas_Jabatan` |    | Kelas jabatan (opsional) — tampil di bagan sebagai singkatan **"KLS"** |
+| `Bezetting`  |       | Jumlah pengisi jabatan saat ini (opsional) — tampil sebagai **"B"** |
+| `Kebutuhan`  |       | Jumlah formasi yang dibutuhkan (opsional) — tampil sebagai **"K"** |
+| `Kekurangan_Kelebihan` | | Selisih kebutuhan vs bezetting (opsional), mis. `-1` — tampil sebagai **"+/-"** |
+| `ABK`        |       | Hasil Analisis Beban Kerja (opsional) — tampil apa adanya sebagai **"ABK"** |
+| `Keterangan` |       | Catatan bebas (opsional), mis. status atau rangkap jabatan — tampil sebagai **"Ket."** |
 | `Kategori`   |       | Kosongkan untuk jabatan struktural biasa. Isi `Pelaksana` atau `Jabatan Fungsional` agar jabatan ini dikelompokkan terpisah (lihat bagian 8). |
 | `Orientasi_Cabang` |  | Kosongkan untuk ikuti default bagan. Isi `Vertikal` atau `Horizontal` untuk memaksa arah tampilan anak-anak jabatan ini (lihat bagian 9). |
 | `Susunan_Sendiri` |   | Kosongkan untuk ikuti pengaturan atasan. Isi `Vertikal` atau `Horizontal` agar jabatan INI SENDIRI (bukan anaknya) tampil sesuai pilihan ini di antara saudara-saudaranya, menimpa pengaturan atasan (lihat bagian 9). |
 
 Hanya **Jabatan** yang wajib diisi saat menambah/menyunting simpul lewat
-aplikasi — **Keterangan**, **Bezetting**, dan **Kategori** murni opsional.
+aplikasi — semua kolom data lainnya (Kelas Jabatan, Bezetting, Kebutuhan,
+Kekurangan/Kelebihan Pegawai, ABK, Keterangan, Kategori) murni opsional.
+Urutan input di formulir maupun tampilan di kartu bagan selalu:
+**Kelas Jabatan → Bezetting → Kebutuhan → Kekurangan/Kelebihan Pegawai →
+Analisis Beban Kerja → Keterangan**. Di formulir, nama lengkapnya yang
+ditampilkan; di kartu bagan, hanya singkatannya (KLS, B, K, +/-, ABK,
+Ket.) yang tampil supaya kartu tetap ringkas — arahkan kursor ke tiap
+chip untuk melihat nama lengkap & nilainya.
 Aplikasi ini memetakan **struktur jabatan**, bukan data nama orang per orang.
 
 Contoh data ada di `data/struktur-organisasi.xlsx`. Berkas ini **hanya
@@ -178,6 +189,53 @@ repositori:
 > punya backend). Namun karena tersimpan di peramban:
 > - Jangan simpan token di perangkat/peramban bersama atau publik.
 > - Gunakan token dengan izin sesempit mungkin (satu repo, *Contents* saja).
+
+### 6a. Panduan isi tiap kolom (dengan contoh)
+
+Misalkan repo GitHub Anda beralamat di
+`https://github.com/johndoe/bagan-organisasi`, isi Pengaturan GitHub
+seperti ini:
+
+| Kolom | Isi | Keterangan |
+|---|---|---|
+| Pemilik / Organisasi (owner) | `johndoe` | Bagian nama akun/organisasi setelah `github.com/` — **bukan** alamat lengkap. (Boleh juga tempel alamat lengkapnya ke kolom ini — aplikasi akan otomatis menguraikannya jadi owner+repo.) |
+| Nama Repositori | `bagan-organisasi` | Bagian nama repo setelah nama akun. |
+| Cabang (branch) | `main` | Nama branch bawaan repo Anda — cek di halaman repo GitHub, biasanya `main` (repo lama kadang `master`). |
+| Path Berkas dalam Repo | `data/struktur-organisasi.xlsx` | Lokasi berkas Excel di DALAM repo tempat data bagan disimpan. Berkas ini tidak perlu sudah ada — akan dibuat otomatis saat pertama kali "Simpan ke GitHub"/auto-sync. Boleh repo yang sama dengan tempat aplikasi ini di-deploy, atau repo terpisah. |
+| Personal Access Token (PAT) | `ghp_xxxxxxxx…` | Wajib diisi kalau Anda ingin **menyimpan** perubahan (push). Untuk sekadar **melihat** pembaruan otomatis dari repo publik, kolom ini boleh dikosongkan. |
+
+Setelah semua terisi, klik **Simpan Pengaturan** — aplikasi akan otomatis
+mengujinya (harus muncul "✓ Terhubung") sebelum menyimpannya.
+
+### 6b. Mengatasi "Failed to fetch"
+
+Kalau saat menguji koneksi muncul pesan **"Failed to fetch"**, ini adalah
+kegagalan di level jaringan (permintaannya sama sekali tidak sampai ke
+GitHub) — bukan soal token salah. Penyebab paling umum, urut dari yang
+paling sering terjadi:
+
+1. **Halaman dibuka langsung dari komputer, bukan lewat GitHub Pages.**
+   Kalau alamat di address bar peramban diawali `file:///...` (bukan
+   `https://...`), peramban memblokir permintaan ke API pihak lain demi
+   keamanan. **Solusi**: uji fitur sinkronisasi ini hanya di alamat
+   GitHub Pages yang sudah ter-*deploy* (`https://<username>.github.io/<repo>/`),
+   bukan dengan membuka `index.html` langsung dari folder di komputer.
+   Untuk menguji secara lokal sebelum di-deploy, jalankan server statis
+   sederhana dulu (lihat bagian 3) — tapi permintaan ke GitHub tetap
+   memerlukan koneksi internet aktif seperti biasa.
+2. **Pemblokir iklan / ekstensi privasi / firewall jaringan** memblokir
+   `api.github.com`. **Solusi**: coba di jendela penyamaran (incognito)
+   dengan ekstensi nonaktif, atau tanyakan ke admin jaringan kantor bila
+   memakai Wi-Fi kantor/sekolah yang membatasi akses.
+3. **Tidak ada koneksi internet** saat itu, atau GitHub sedang gangguan
+   (cek [status.github.com](https://www.githubstatus.com/)).
+
+Kalau setelah itu masih gagal tapi errornya BUKAN "Failed to fetch"
+(misalnya "Repositori tidak ditemukan" atau "Token tidak valid"), berarti
+permintaannya sudah sampai ke GitHub — periksa kembali ejaan Owner/Repo
+persis sama dengan di GitHub (huruf besar/kecil berpengaruh), dan pastikan
+token fine-grained-nya benar diberi akses ke repo yang sama persis.
+
 > - Cabut (*revoke*) token kapan saja dari halaman Developer settings GitHub
 >   bila dicurigai bocor.
 

@@ -6,7 +6,7 @@
 <title>Peta Jabatan Organisasi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=14">
+<link rel="stylesheet" href="css/style.css?v=16">
 </head>
 <body>
 
@@ -145,11 +145,29 @@
         Anak yang sudah punya pengaturan "Susunan Sendiri" (di formulirnya masing-masing)
         akan tetap memakai pengaturannya sendiri, mengabaikan ini.
       </p>
-      <label>Keterangan <span class="opt">(opsional)</span>
-        <textarea id="fieldKeterangan" rows="3" placeholder="cth. Merangkap Plt. Manajer Logistik"></textarea>
+
+      <p class="modal__section-title">Data Kepegawaian <span class="opt">(semua opsional)</span></p>
+      <p class="modal__hint">
+        Nama lengkap ditampilkan di sini saat mengisi — pada kartu bagan, hanya
+        singkatannya (dalam kurung) yang akan tampil, supaya kartu tetap ringkas.
+      </p>
+      <label>Kelas Jabatan <span class="opt">(disingkat "KLS")</span>
+        <input type="text" id="fieldKelasJabatan" placeholder="cth. 9">
       </label>
-      <label>Bezetting <span class="opt">(opsional)</span>
+      <label>Bezetting <span class="opt">(disingkat "B")</span>
         <input type="text" id="fieldBezetting" placeholder="cth. 2 dari 3 formasi">
+      </label>
+      <label>Kebutuhan <span class="opt">(disingkat "K")</span>
+        <input type="text" id="fieldKebutuhan" placeholder="cth. 3">
+      </label>
+      <label>Kekurangan/Kelebihan Pegawai <span class="opt">(disingkat "+/-")</span>
+        <input type="text" id="fieldKekuranganKelebihan" placeholder="cth. -1">
+      </label>
+      <label>Analisis Beban Kerja <span class="opt">(disingkat "ABK")</span>
+        <input type="text" id="fieldAbk" placeholder="cth. 85%">
+      </label>
+      <label>Keterangan <span class="opt">(disingkat "Ket.")</span>
+        <textarea id="fieldKeterangan" rows="3" placeholder="cth. Merangkap Plt. Manajer Logistik"></textarea>
       </label>
       <input type="hidden" id="fieldId">
     </div>
@@ -175,6 +193,13 @@
         Data akan dibaca/ditulis sebagai berkas <code>.xlsx</code> di repositori GitHub Anda melalui GitHub API,
         langsung dari peramban — tidak perlu server tambahan.
       </p>
+      <p class="modal__hint">
+        <strong>Contoh:</strong> kalau alamat repo Anda di GitHub adalah
+        <code>https://github.com/johndoe/bagan-organisasi</code>, maka
+        Owner = <code>johndoe</code> dan Nama Repositori = <code>bagan-organisasi</code>
+        (bukan alamat lengkapnya — boleh tempel alamat lengkap ke kolom Owner,
+        nanti otomatis diuraikan).
+      </p>
       <label>Pemilik / Organisasi (owner)
         <input type="text" id="ghOwner" placeholder="cth. namaperusahaan">
       </label>
@@ -187,13 +212,22 @@
       <label>Path Berkas dalam Repo
         <input type="text" id="ghPath" placeholder="data/struktur-organisasi.xlsx" value="data/struktur-organisasi.xlsx">
       </label>
-      <label>Personal Access Token (PAT)
+      <label>Personal Access Token (PAT) <span class="opt">(wajib untuk menyimpan, opsional untuk sekadar melihat repo publik)</span>
         <input type="password" id="ghToken" placeholder="ghp_… (izin: Contents Read & Write)">
       </label>
       <p class="modal__warning">
         ⚠ Token disimpan hanya di penyimpanan lokal peramban ini (localStorage), tidak pernah dikirim ke
         pihak lain selain <code>api.github.com</code>. Gunakan token <em>fine-grained</em> yang dibatasi
         hanya untuk repositori ini, dan jangan pakai perangkat/peramban bersama untuk menyimpannya.
+      </p>
+      <p class="modal__warning">
+        ⚠ Muncul "Failed to fetch" saat menguji koneksi? Pastikan Anda membuka
+        halaman ini lewat alamat GitHub Pages yang sudah di-<em>deploy</em>
+        (diawali <code>https://…github.io/…</code>) — bukan dengan membuka
+        berkas <code>index.html</code> langsung dari komputer (alamatnya akan
+        diawali <code>file://</code>), karena peramban memblokir permintaan
+        semacam ini dari berkas lokal. Kalau sudah lewat https:// dan masih
+        gagal, coba nonaktifkan sementara pemblokir iklan/ekstensi privasi.
       </p>
     </div>
     <div class="modal__foot">
@@ -219,10 +253,10 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="js/store.js?v=14"></script>
-<script src="js/xlsx-io.js?v=14"></script>
-<script src="js/github-sync.js?v=14"></script>
-<script src="js/chart-render.js?v=14"></script>
-<script src="js/app.js?v=14"></script>
+<script src="js/store.js?v=16"></script>
+<script src="js/xlsx-io.js?v=16"></script>
+<script src="js/github-sync.js?v=16"></script>
+<script src="js/chart-render.js?v=16"></script>
+<script src="js/app.js?v=16"></script>
 </body>
 </html>

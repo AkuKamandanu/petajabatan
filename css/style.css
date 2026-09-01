@@ -530,6 +530,22 @@ ul.branch-h > li:only-child::after{
   line-height:1.3;
   overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
 }
+.node-card__facts{
+  display:flex; flex-wrap:wrap; gap:4px;
+  margin-top:8px; padding-top:7px;
+  border-top:1px dashed var(--paper-line);
+}
+.fact-chip{
+  display:inline-flex; align-items:baseline; gap:3px;
+  font-family: var(--mono); font-size:10.5px;
+  background: var(--paper); border:1px solid var(--paper-line);
+  border-radius:5px; padding:2px 7px 2px 6px;
+  color: var(--ink);
+  white-space:nowrap;
+}
+.fact-chip__label{
+  font-weight:700; color: var(--accent-navy); font-size:9.5px;
+}
 .node-card__ket{
   margin:8px 0 0;
   font-size:11.5px;
@@ -540,6 +556,10 @@ ul.branch-h > li:only-child::after{
   -webkit-line-clamp:2;
   -webkit-box-orient:vertical;
   overflow:hidden;
+}
+.node-card__ket-label{
+  font-family: var(--mono); font-weight:700; font-style:normal;
+  color: var(--accent-clay); font-size:10px;
 }
 .node-card__actions{
   position:absolute; top:8px; right:8px;
@@ -623,7 +643,7 @@ ul.branch-h > li:only-child::after{
    (bukan kotak individual per orang) di bawah atasannya.
    ============================================================ */
 .group-card{
-  width:300px;
+  width:460px;
   background: var(--panel);
   border:1px solid var(--paper-line);
   border-radius: var(--radius);
@@ -643,19 +663,20 @@ ul.branch-h > li:only-child::after{
 .group-card__head .group-add-btn{ background:rgba(255,255,255,.18); border-color:rgba(255,255,255,.4); color:#fff; }
 .group-card__head .group-add-btn:hover{ background:#fff; color: var(--ink); }
 
-.group-card__table{ width:100%; border-collapse:collapse; font-size:11.5px; }
+.group-card__table{ width:100%; border-collapse:collapse; font-size:11px; table-layout:fixed; }
 .group-card__table th{
-  text-align:left; font-family: var(--mono); font-weight:500; font-size:10px;
-  color: var(--ink-faint); text-transform:uppercase; letter-spacing:.04em;
-  padding:6px 10px; border-bottom:1px solid var(--paper-line);
+  text-align:left; font-family: var(--mono); font-weight:500; font-size:9.5px;
+  color: var(--ink-faint); text-transform:uppercase; letter-spacing:.03em;
+  padding:6px 6px; border-bottom:1px solid var(--paper-line);
   background: var(--paper);
 }
+.group-card__table th:first-child, .group-card__table td:first-child{ width:30%; }
 .group-card__table td{
-  padding:6px 10px; border-bottom:1px solid var(--paper-line);
-  color: var(--ink); vertical-align:top;
+  padding:6px 6px; border-bottom:1px solid var(--paper-line);
+  color: var(--ink); vertical-align:top; word-break:break-word;
 }
 .group-card__table tr:last-child td{ border-bottom:none; }
-.group-card__table td:last-child{ text-align:right; white-space:nowrap; }
+.group-card__table td:last-child{ text-align:right; white-space:nowrap; width:26px; }
 .group-row-edit{
   width:20px; height:20px; border-radius:5px; border:1px solid var(--line);
   background:#fff; font-size:11px; cursor:pointer;
@@ -713,6 +734,11 @@ ul.branch-h > li:only-child::after{
   box-shadow: 0 0 0 3px rgba(36,66,94,.12);
 }
 .modal__hint{ font-size:12.5px; color: var(--ink-soft); line-height:1.5; margin:0; }
+.modal__section-title{
+  font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+  color: var(--accent-navy); margin:6px 0 -4px; padding-top:10px;
+  border-top:1px solid var(--paper-line);
+}
 .modal__warning{
   font-size:12px; line-height:1.5; color: var(--accent-clay);
   background:#FBF3EC; border:1px solid #F0DFCF;
