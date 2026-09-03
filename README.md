@@ -244,7 +244,7 @@ token fine-grained-nya benar diberi akses ke repo yang sama persis.
 - Tambah/sunting/hapus jabatan lewat formulir modal.
 - Penghapusan simpul yang punya bawahan akan memindahkan bawahan tersebut
   ke atasan dari simpul yang dihapus (bukan ikut terhapus).
-- Pencarian nama/jabatan/departemen menyorot simpul yang cocok.
+- Pencarian jabatan/keterangan otomatis menggulir & menyorot hasil pertama, dengan tombol navigasi (‹ ›) atau tombol **Enter**/**Shift+Enter** untuk berpindah ke hasil berikutnya/sebelumnya kalau kecocokannya lebih dari satu. Cabang yang sedang diciutkan otomatis diperluas supaya hasilnya tetap terlihat.
 - Ciutkan/perluas cabang per simpul untuk bagan besar.
 - Perbesar/perkecil kanvas, alat geser (✋) untuk menggeser tampilan ke segala arah, dan tombol ▦ untuk menampilkan/menyembunyikan garis grid latar (preferensi tersimpan otomatis).
 - **Orientasi per cabang** — setiap jabatan bisa mengatur sendiri apakah anak-anaknya ditampilkan vertikal (ke bawah) atau horizontal (ke samping), lepas dari pengaturan cabang lain. Lihat bagian 9.
