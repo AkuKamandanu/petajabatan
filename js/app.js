@@ -42,6 +42,10 @@
     kategoriHint: $('#kategoriHint'),
     fieldOrientasi: $('#fieldOrientasi'),
     fieldSusunan: $('#fieldSusunan'),
+    searchNav: $('#searchNav'),
+    searchNavCount: $('#searchNavCount'),
+    btnSearchPrev: $('#btnSearchPrev'),
+    btnSearchNext: $('#btnSearchNext'),
     fieldKeterangan: $('#fieldKeterangan'),
     fieldBezetting: $('#fieldBezetting'),
     fieldKelasJabatan: $('#fieldKelasJabatan'),
@@ -703,11 +707,70 @@
     rerender({ search: els.searchBox.value });
   }
 
-  // ---------- search ----------
+  // ---------- search: auto-sorot + navigasi hasil ----------
   let searchDebounce;
+  let searchMatchIds = [];
+  let searchMatchIndex = -1;
+
+  function updateSearchNav() {
+    const total = searchMatchIds.length;
+    els.searchNav.classList.toggle('show', els.searchBox.value.trim() !== '');
+    els.searchNavCount.textContent = total === 0 ? '0/0' : `${searchMatchIndex + 1}/${total}`;
+    els.btnSearchPrev.disabled = total === 0;
+    els.btnSearchNext.disabled = total === 0;
+  }
+
+  function clearSearchActiveHighlight() {
+    els.chartRoot.querySelectorAll('.node-card.search-active').forEach(el => el.classList.remove('search-active'));
+  }
+
+  // Arahkan tampilan ke salah satu hasil pencarian: perluas dulu semua
+  // induk yang mungkin sedang diciutkan (supaya kartunya benar-benar ada
+  // di layar), lalu render ulang, gulir ke sana secara halus, dan beri
+  // sorotan yang jelas (bukan cuma outline redup seperti kartu match lain).
+  function goToSearchMatch(index) {
+    if (searchMatchIds.length === 0) return;
+    searchMatchIndex = ((index % searchMatchIds.length) + searchMatchIds.length) % searchMatchIds.length;
+    const id = searchMatchIds[searchMatchIndex];
+    ChartRender.expandAllAncestorsOf(id, Store.getAll());
+    rerender({ search: els.searchBox.value });
+    updateSearchNav();
+    requestAnimationFrame(() => {
+      const card = els.chartRoot.querySelector(`.node-card[data-id="${CSS.escape(id)}"]`);
+      if (!card) return;
+      card.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+      clearSearchActiveHighlight();
+      card.classList.add('search-active');
+    });
+  }
+
   function handleSearch() {
     clearTimeout(searchDebounce);
-    searchDebounce = setTimeout(() => rerender({ search: els.searchBox.value }), 150);
+    searchDebounce = setTimeout(() => {
+      const term = els.searchBox.value;
+      if (term.trim() === '') {
+        searchMatchIds = [];
+        searchMatchIndex = -1;
+        rerender({ search: term });
+        updateSearchNav();
+        return;
+      }
+      searchMatchIds = ChartRender.getMatchIds(getRenderList(), term);
+      searchMatchIndex = -1;
+      if (searchMatchIds.length > 0) {
+        goToSearchMatch(0); // langsung arahkan & sorot hasil pertama (sekaligus me-render ulang)
+      } else {
+        rerender({ search: term }); // tetap render supaya kartu yang tak cocok tampak redup
+        updateSearchNav();
+      }
+    }, 250);
+  }
+
+  function handleSearchKeydown(e) {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    if (searchMatchIds.length === 0) return;
+    goToSearchMatch(searchMatchIndex + (e.shiftKey ? -1 : 1));
   }
 
   // ---------- wire up events ----------
@@ -735,6 +798,9 @@
     });
 
     els.searchBox.addEventListener('input', handleSearch);
+    els.searchBox.addEventListener('keydown', handleSearchKeydown);
+    els.btnSearchNext.addEventListener('click', () => goToSearchMatch(searchMatchIndex + 1));
+    els.btnSearchPrev.addEventListener('click', () => goToSearchMatch(searchMatchIndex - 1));
 
     $('#zoomIn').addEventListener('click', () => { zoom = Math.min(2, zoom + 0.1); applyZoom(); });
     $('#zoomOut').addEventListener('click', () => { zoom = Math.max(0.4, zoom - 0.1); applyZoom(); });

@@ -6,7 +6,7 @@
 <title>Peta Jabatan Organisasi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=16">
+<link rel="stylesheet" href="css/style.css?v=17">
 </head>
 <body>
 
@@ -66,7 +66,14 @@
   </div>
 
   <div class="toolbar__group toolbar__group--right">
-    <input type="search" id="searchBox" placeholder="Cari jabatan / keterangan…" class="search">
+    <div class="search-wrap">
+      <input type="search" id="searchBox" placeholder="Cari jabatan / keterangan…" class="search">
+      <div class="search-nav" id="searchNav">
+        <span id="searchNavCount">0/0</span>
+        <button class="btn btn--icon" id="btnSearchPrev" title="Hasil sebelumnya (Shift+Enter)">‹</button>
+        <button class="btn btn--icon" id="btnSearchNext" title="Hasil berikutnya (Enter)">›</button>
+      </div>
+    </div>
     <div class="zoom">
       <button class="btn btn--icon" id="btnGridToggle" title="Tampilkan/sembunyikan garis grid latar">▦</button>
       <button class="btn btn--icon" id="btnPanMode" title="Alat geser (klik-tarik untuk menggeser tampilan)">✋</button>
@@ -253,10 +260,10 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="js/store.js?v=16"></script>
-<script src="js/xlsx-io.js?v=16"></script>
-<script src="js/github-sync.js?v=16"></script>
-<script src="js/chart-render.js?v=16"></script>
-<script src="js/app.js?v=16"></script>
+<script src="js/store.js?v=17"></script>
+<script src="js/xlsx-io.js?v=17"></script>
+<script src="js/github-sync.js?v=17"></script>
+<script src="js/chart-render.js?v=17"></script>
+<script src="js/app.js?v=17"></script>
 </body>
 </html>

@@ -9,6 +9,15 @@ const ChartRender = (() => {
   let selectedIds = new Set(); // dipakai saat mode "pilih banyak" aktif
   let selectMode = false;
 
+  // Ikon SVG inline (bukan karakter Unicode) untuk tombol Fokus & Sunting.
+  // PENTING: karakter Unicode "⌕" (U+2315) yang dipakai sebelumnya untuk
+  // ikon Fokus TIDAK punya glyph di font sistem macOS — tombolnya jadi
+  // tampak kosong/tidak terlihat di MacBook, walau elemen tombolnya tetap
+  // ada. SVG dijamin tampil identik di semua sistem operasi & peramban
+  // karena tidak bergantung pada glyph font sama sekali.
+  const ICON_FOCUS = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg>';
+  const ICON_EDIT = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>';
+
   function buildChildrenMap(employees) {
     const map = new Map();
     employees.forEach(e => {
@@ -68,7 +77,7 @@ const ChartRender = (() => {
         <td>${escapeHtml(it.kekuranganKelebihan) || '—'}</td>
         <td>${escapeHtml(it.abk) || '—'}</td>
         <td>${escapeHtml(it.keterangan) || '—'}</td>
-        <td><button class="group-row-edit" data-id="${escapeHtml(it.id)}" title="Sunting">✎</button></td>
+        <td><button class="group-row-edit" data-id="${escapeHtml(it.id)}" title="Sunting">${ICON_EDIT}</button></td>
       </tr>`;
     });
     html += `</tbody></table>`;
@@ -132,9 +141,9 @@ const ChartRender = (() => {
     html += `<div class="node-shell">`;
     html += `<div class="${cardClasses.join(' ')}" data-id="${safeId}" tabindex="0" role="button" aria-label="Buka detail ${escapeHtml(emp.jabatan)}">`;
     html += `<div class="node-card__actions">
-                <button class="node-mini-btn" data-action="focus" title="Fokus: tampilkan hanya jabatan ini + turunannya">⌕</button>
+                <button class="node-mini-btn" data-action="focus" title="Fokus: tampilkan hanya jabatan ini + turunannya">${ICON_FOCUS}</button>
                 <button class="node-mini-btn" data-action="add" title="Tambah bawahan">+</button>
-                <button class="node-mini-btn" data-action="edit" title="Sunting">✎</button>
+                <button class="node-mini-btn" data-action="edit" title="Sunting">${ICON_EDIT}</button>
               </div>`;
     html += `<div class="node-card__head">`;
     html += `<span class="node-avatar">${escapeHtml(initials(emp.jabatan))}</span>`;
@@ -235,5 +244,17 @@ const ChartRender = (() => {
     }
   }
 
-  return { render, toggleCollapse, expandAllAncestorsOf };
+  // Dipakai oleh app.js untuk navigasi "hasil berikutnya/sebelumnya" —
+  // memakai logika pencocokan (matches()) yang PERSIS SAMA dengan yang
+  // dipakai untuk menyorot/meredupkan kartu di bagan, supaya daftar hasil
+  // navigasi selalu konsisten dengan apa yang terlihat sorot di layar.
+  function getMatchIds(employees, term) {
+    const t = (term || '').trim().toLowerCase();
+    if (!t) return [];
+    return employees
+      .filter(e => `${e.jabatan} ${e.keterangan} ${e.bezetting} ${e.kelasJabatan} ${e.kebutuhan} ${e.kekuranganKelebihan} ${e.abk}`.toLowerCase().includes(t))
+      .map(e => e.id);
+  }
+
+  return { render, toggleCollapse, expandAllAncestorsOf, getMatchIds };
 })();
