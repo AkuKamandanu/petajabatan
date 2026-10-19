@@ -35,8 +35,7 @@ const GithubSync = (() => {
   function headers(cfg) {
     const h = {
       'Accept': 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28',
-      'Cache-Control': 'no-cache'
+      'X-GitHub-Api-Version': '2022-11-28'
     };
     if (cfg.token) h['Authorization'] = `Bearer ${cleanSegment(cfg.token)}`;
     return h;
